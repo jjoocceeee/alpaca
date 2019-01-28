@@ -39,7 +39,7 @@ def main():
     #Getting universe of sp500
     sp500 = save_sp500_tickers()
     count = 0
-    while count < 1000:
+    while count < 500:
         clock = api.get_clock()
         now = clock.timestamp
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
