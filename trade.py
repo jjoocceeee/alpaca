@@ -38,8 +38,8 @@ def main():
 
     #Getting universe of sp500
     sp500 = save_sp500_tickers()
-
-    while True:
+    count = 0
+    while count < 1000:
         clock = api.get_clock()
         now = clock.timestamp
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
@@ -54,6 +54,7 @@ def main():
         else:
             print('markets arent open yet')
         time.sleep(1)
+        count = count + 1
 
 
 def prices(symbols):
