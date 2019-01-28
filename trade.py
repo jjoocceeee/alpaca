@@ -6,6 +6,7 @@ import requests
 import finsymbols as symbols
 import time
 import logging
+import os
 LOG_FILENAME = 'alpaca.log'
 logging.basicConfig(filename=LOG_FILENAME) 
 
@@ -27,13 +28,12 @@ def save_sp500_tickers():
 
 def main():
     # empty!
-    with open('auth.json') as json_data:
-        auth = json.load(json_data)
+    
 
     api = tradeapi.REST(
-        key_id = auth["key_id"],
-        secret_key= auth["secret_key"],
-        base_url=auth["URL"]
+        key_id = os.environ.get('alpaca_key_id'),
+        secret_key= os.environ.get('alpaca_secret_key'),
+        base_url=os.environ.get('alpaca_url')
     )
 
     #Getting universe of sp500
