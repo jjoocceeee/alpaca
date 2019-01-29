@@ -42,6 +42,7 @@ def main():
     while count < 500:
         clock = api.get_clock()
         now = clock.timestamp
+        done = now.strftime('%Y-%m-%d')
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
             # TODO: execute Trades
             price_df = prices(save_sp500_tickers())
