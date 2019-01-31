@@ -1,14 +1,26 @@
 import alpaca_trade_api as tradeapi 
+from datetime import datetime as dt
 import json
 import bs4 as bs
 import pickle
 import requests
 import finsymbols as symbols
-import time
 import logging
 import os
+import pandas as pd
+import time
 LOG_FILENAME = 'alpaca.log'
+NY = 'America/New York'
 logging.basicConfig(filename=LOG_FILENAME) 
+
+api = tradeapi.REST(
+    # key_id = os.environ.get('alpaca_key_id'),
+    # secret_key= os.environ.get('alpaca_secret_key'),
+    # base_url=os.environ.get('alpaca_url')
+    key_id =  "PKBKWTMHB9BZWY8WLI57",
+    secret_key = "pQYWZF5syUfdyyLW/hmrg6L2G0JRAq/ZOHhM5qFZ",
+    base_url = "https://paper-api.alpaca.markets" 
+)
 
 def save_sp500_tickers():
     resp = requests.get('http://en.wikipedia.org/wiki/List_of_S%26P_500_companies')
@@ -30,21 +42,16 @@ def main():
     # empty!
     
 
-    api = tradeapi.REST(
-        key_id = os.environ.get('alpaca_key_id'),
-        secret_key= os.environ.get('alpaca_secret_key'),
-        base_url=os.environ.get('alpaca_url')
-    )
-
     #Getting universe of sp500
     sp500 = save_sp500_tickers()
     count = 0
     while count < 500:
         clock = api.get_clock()
         now = clock.timestamp
-        done = now.strftime('%Y-%m-%d')
+        done = ""
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
-            # TODO: execute Trades
+            print("Executing trades")
+            
             price_df = prices(save_sp500_tickers())
             orders = get_orders(api, price_df)
             trade(orders)
@@ -58,44 +65,7 @@ def main():
         count = count + 1
 
 
-def prices(symbols):
-    now = pd.Timestamp.now(tz=NY)
-    end_dt = now
 
-    if now.time() >= pd.Timestamp('09:30', tz=NY).time():
-        end_dt = now- pd.Timedelta(now.strftime('%H:%M:%S')) - pd.timeDelta('1 minute')
-
-
-    return _get_prices(symbols, end_dt)
-
-def _get_prices(symbols, end_dt, max_workers=5):
-    '''Get the map of DataFrame price data from ALpaca's data API.'''
-    start_dt = end_dt = pd.Timedelta('50 days')
-    start = start_dt.strftime('%Y-%-m-%-d')
-    end = end_dt.strftime('%Y-%-m-%-d')
-
-
-    def get_barset(symbols):
-        return api.get_barset(
-            symbols,
-            'day',
-            limit=50,
-            start=start,
-            end=end
-        )
-
-
-    #Only 200 API calls are allowed at a time.
-    barset=None
-    idx = 0
-    while idx <=len(symbols)-1:
-        if barset is None:
-            barset = get_barset(symbols[idx:idx+200])
-        else:
-            barset.update(get_barset(symbols[idx:idx+200]))
-        idx+=200
-    
-    return barset.df
 
 
 #Short term EMA ususally converges close to the price, but if it
@@ -107,7 +77,7 @@ def calc_scores(price_df, dayindex = -1):
     diffs = {}
     param = 10
     for symbol in price_df.columns.levels[0]:
-        df =price_df[symbol]
+        df = price_df[symbol]
         if len(df.close.values) <= param:
             continue
         ema = df.close.ewm(span=param).mean()[dayindex]
