@@ -51,8 +51,8 @@ def main():
             
             price_df = prices(save_sp500_tickers())
             scores = calc_scores(price_df)
-            #orders = get_orders(api, price_df)
-            #trade(orders)
+            orders = get_orders(api, price_df, position_size = 1000, max_positions = 10))
+            trade(orders
 
 
             done = now.strftime('%Y-%m-%d')
@@ -60,8 +60,8 @@ def main():
         else:
             price_df = prices(save_sp500_tickers())
             # scores = calc_scores(price_df)
-            orders = get_orders(api, price_df)
-            trade(orders)
+            # orders = get_orders(api, price_df)
+            # trade(orders)
             print('markets arent open yet')
         time.sleep(1)
         count = count + 1
