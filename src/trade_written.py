@@ -27,7 +27,8 @@ def save_sp500_tickers():
     table= soup.find('table', {'class':'wikitable sortable'})
     tickers = []
     for row in table.findAll('tr')[1:]:
-        ticker = row.findAll('td')[0].text
+        name = row.findAll('td')[0].text
+        ticker = row.findAll('td')[1].text
         tickers.append(ticker)
 
     with open("sp500tickers.pickle", "wb") as f:
@@ -42,13 +43,12 @@ def main():
     #Getting universe of sp500
     sp500 = save_sp500_tickers()
     count = 0
+    done = ''
     while count < 500:
         clock = api.get_clock()
         now = clock.timestamp
-        done = ''
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
             print("Executing trades")
-            
             price_df = prices(save_sp500_tickers())
             scores = calc_scores(price_df)
             orders = get_orders(api, price_df, 1000, 5)
@@ -56,10 +56,6 @@ def main():
             done = now.strftime('%Y-%m-%d')
             logger.info(f'done for {done}')
         else:
-            price_df = prices(save_sp500_tickers())
-            # scores = calc_scores(price_df)
-            # orders = get_orders(api, price_df)
-            # trade(orders)
             print('markets arent open yet')
         time.sleep(1)
         count = count + 1
@@ -87,8 +83,6 @@ def _get_prices(symbols, end_dt, max_workers=5):
     start = pd.Timestamp(start_dt).isoformat()
     end = end_dt.isoformat()
     # end = end_dt
-    print(start)
-    print(end)
 
 
     def get_barset(symbols):
@@ -130,15 +124,11 @@ def calc_scores(info_dict, dayindex=-1):
         if len(df.Close.values) <= params:
             continue
         ema = df.Close.ewm(span=params).mean()
-        # print("EMA for ", symbol, "\n", ema)
         last = df.Close.values[dayindex]
-        # print(last)
         diff = (last - ema) / last
-        # print(diff)
         diffs[symbol] = diff[1]
-        # print(symbol, " : ", diff[1])
 
-    # Print(sorted(diffs.items(), key=operator.itemgetter(1)))
+    # print(sorted(diffs.items(), key=operator.itemgetter(1)))
     return sorted(diffs.items(), key=operator.itemgetter(1))
 
 
@@ -158,7 +148,7 @@ def get_df(symbols):
     return diction
 
 
-def get_orders(api, price_df, position_size = 100, max_positions = 5):
+def get_orders(api, price_df, position_size = 100, max_positions = 10):
     # Rank the stocks based on the indicators.
     ranked = calc_scores(price_df)
     to_buy = set()
@@ -168,9 +158,6 @@ def get_orders(api, price_df, position_size = 100, max_positions = 5):
     # Take the top one twentieth out of ranking,
     # excluding stocks too expensive to buy a share
     for symbol in ranked[:len(ranked) // 20]:
-        print(symbol)
-        print(symbol[0])
-        # print(price_df[symbol[0]])
         price = float(price_df[symbol[0]].Close.values[-1])
         print("Price of: ", symbol[0], " : ", price)
         if price > float(account.cash):
@@ -180,14 +167,11 @@ def get_orders(api, price_df, position_size = 100, max_positions = 5):
     # Now getting the current positions and seeing what to buy,
     # What to sell jto transition to today's desired portfolio.
     positions = api.list_positions()
-    # print("Positions: \n", positions)
     holdings = set()
     for p in positions:
         holdings.add(p)
-    # print(holdings)
     holding_symbol = holdings
     to_sell = holding_symbol - to_buy
-    # print("To Sell: ", to_sell)
     to_buy = to_buy - holding_symbol
     orders = []
 
@@ -196,9 +180,9 @@ def get_orders(api, price_df, position_size = 100, max_positions = 5):
     # portfolio, sell it
     # TODO: Hasn't been tested yet.
     for symbol in to_sell:
-        shares = holdings[symbol].qty
+        shares = symbol.qty
         orders.append({
-            'symbol': symbol,
+            'symbol': symbol.symbol,
             'qty': shares,
             'side': 'sell',
         })
