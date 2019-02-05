@@ -51,7 +51,7 @@ def main():
             
             price_df = prices(save_sp500_tickers())
             scores = calc_scores(price_df)
-            orders = get_orders(api, price_df, 1000, 10))
+            orders = get_orders(api, price_df, 1000, 10)
             trade(orders
 
 
