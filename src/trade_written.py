@@ -51,7 +51,7 @@ def main():
             
             price_df = prices(save_sp500_tickers())
             scores = calc_scores(price_df)
-            orders = get_orders(api, price_df, 1000, 10)
+            orders = get_orders(api, price_df, 1000, 5)
             trade(orders)
             done = now.strftime('%Y-%m-%d')
             logger.info(f'done for {done}')
@@ -95,7 +95,7 @@ def _get_prices(symbols, end_dt, max_workers=5):
         return api.get_barset(
             symbols,
             'day',
-            limit = 50,
+            limit = 25,
             start=pd.to_datetime(start),
             end=pd.to_datetime(end)
         )
