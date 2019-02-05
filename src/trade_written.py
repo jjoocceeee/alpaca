@@ -45,16 +45,14 @@ def main():
     while count < 500:
         clock = api.get_clock()
         now = clock.timestamp
-        done = ""
+        done = ''
         if clock.is_open and done != now.strftime('%Y-%m-%d'):
             print("Executing trades")
             
             price_df = prices(save_sp500_tickers())
             scores = calc_scores(price_df)
             orders = get_orders(api, price_df, 1000, 10)
-            trade(orders
-
-
+            trade(orders)
             done = now.strftime('%Y-%m-%d')
             logger.info(f'done for {done}')
         else:
