@@ -100,14 +100,14 @@ def _get_prices(symbols, end_dt, max_workers=5):
             end=pd.to_datetime(end)
         )
 
-    # The maximum number of symbols we can request at once is 200.
+    # The maximum number of symbols we can request at once is 100.
     barset = None
     idx = 0
     while idx <= len(symbols) - 1:
         if barset is None:
-            barset = get_barset(symbols[idx:idx+200])
+            barset = get_barset(symbols[idx:idx+100])
         else:
-            barset.update(get_barset(symbols[idx:idx+200]))
+            barset.update(get_barset(symbols[idx:idx+100]))
         idx += 200
 
     return get_df(barset)
